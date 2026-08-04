@@ -29,7 +29,7 @@
 #define OWM_NUM_HOURLY        48 // 48
 #define OWM_NUM_DAILY          8 // 8
 #define OWM_NUM_ALERTS         8 // OpenWeatherMaps does not specify a limit, but if you need more alerts you are probably doomed.
-#define OWM_NUM_AIR_POLLUTION 24 // Depending on AQI scale, hourly concentrations will need to be averaged over a period of 1h to 24h
+#define OWM_NUM_AIR_POLLUTION  1 // Current air-pollution sample only
 
 typedef struct owm_weather
 {

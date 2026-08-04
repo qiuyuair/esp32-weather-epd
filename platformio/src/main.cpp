@@ -273,7 +273,20 @@ void setup()
     powerOffDisplay();
     beginDeepSleep(startTime, &timeInfo);
   }
-  rxStatus = getOWMairpollution(client, owm_air_pollution);
+
+  // Use a fresh TLS client for the second HTTPS API to avoid connection-refused
+  // after the large One Call response on ESP32-C3.
+  client.stop();
+#ifdef USE_HTTP
+  WiFiClient airClient;
+#elif defined(USE_HTTPS_NO_CERT_VERIF)
+  WiFiClientSecure airClient;
+  airClient.setInsecure();
+#elif defined(USE_HTTPS_WITH_CERT_VERIF)
+  WiFiClientSecure airClient;
+  airClient.setCACert(cert_Sectigo_Public_Server_Authentication_Root_R46);
+#endif
+  rxStatus = getOWMairpollution(airClient, owm_air_pollution);
   if (rxStatus != HTTP_CODE_OK)
   {
     killWiFi();
@@ -290,15 +303,17 @@ void setup()
   killWiFi(); // WiFi no longer needed
 
   // GET INDOOR TEMPERATURE AND HUMIDITY, start BMEx80...
+  float inTemp     = NAN;
+  float inHumidity = NAN;
+#if !defined(SENSOR_NONE)
   pinMode(PIN_BME_PWR, OUTPUT);
   digitalWrite(PIN_BME_PWR, HIGH);
 #if defined(SENSOR_INIT_DELAY_MS) && SENSOR_INIT_DELAY_MS > 0
   delay(SENSOR_INIT_DELAY_MS);
 #endif
   TwoWire I2C_bme = TwoWire(0);
+  I2C_bme.setTimeOut(100); // ms; avoid hanging the bus / tripping the WDT
   I2C_bme.begin(PIN_BME_SDA, PIN_BME_SCL, 100000); // 100kHz
-  float inTemp     = NAN;
-  float inHumidity = NAN;
 #if defined(SENSOR_BME280)
   Serial.print(String(TXT_READING_FROM) + " BME280... ");
   Adafruit_BME280 bme;
@@ -336,6 +351,7 @@ void setup()
     Serial.println(statusStr);
   }
   digitalWrite(PIN_BME_PWR, LOW);
+#endif // !SENSOR_NONE
 
   String refreshTimeStr;
   getRefreshTimeStr(refreshTimeStr, timeConfigured, &timeInfo);
@@ -343,6 +359,8 @@ void setup()
   getDateStr(dateStr, &timeInfo);
 
   // RENDER FULL REFRESH
+  // 3-color panels can block for a long time; disable task WDT during refresh.
+  disableLoopWDT();
   initDisplay();
   do
   {
@@ -357,6 +375,7 @@ void setup()
     drawStatusBar(statusStr, refreshTimeStr, wifiRSSI, batteryVoltage);
   } while (display.nextPage());
   powerOffDisplay();
+  enableLoopWDT();
 
   // DEEP SLEEP
   beginDeepSleep(startTime, &timeInfo);

@@ -29,8 +29,8 @@
 //   DISP_7C_E6 - 7.3in spectra 6 e-Paper (E6) 800x480px  7-Color
 //   DISP_BW_V1 - 7.5in e-Paper (v1)           640x384px  Black/White
 // Uncomment the macro that identifies your physical panel.
-#define DISP_BW_V2
-// #define DISP_3C_B
+// #define DISP_BW_V2
+#define DISP_3C_B
 // #define DISP_7C_F
 // #define DISP_7C_E6
 // #define DISP_BW_V1
@@ -41,13 +41,15 @@
 // The Waveshare rev2.2 is no longer in production.
 // Users of the Waveshare rev2.3 have reported experiencing low contrast issues.
 // Uncomment the macro that identifies your driver board hardware.
-#define DRIVER_DESPI_C02
-// #define DRIVER_WAVESHARE
+// ##define DRIVER_DESPI_C02
+#define DRIVER_WAVESHARE
 
 // INDOOR ENVIRONMENT SENSOR
 // Uncomment the macro that identifies your sensor.
+// Use SENSOR_NONE if no indoor sensor is connected.
 #define SENSOR_BME280
 // #define SENSOR_BME680
+// #define SENSOR_NONE
 
 // If you encounter issues with the BME280 sensor showing no data, uncomment and
 // add a small delay before reading it's value. 300ms seems to work for most people
@@ -88,8 +90,8 @@
 //   Metric   : Celsius
 //   Imperial : Fahrenheit
 // #define UNITS_TEMP_KELVIN
-// #define UNITS_TEMP_CELSIUS
-#define UNITS_TEMP_FAHRENHEIT
+#define UNITS_TEMP_CELSIUS
+// #define UNITS_TEMP_FAHRENHEIT
 
 // UNITS - WIND SPEED
 //   Metric   : Kilometers per Hour
@@ -97,17 +99,17 @@
 // #define UNITS_SPEED_METERSPERSECOND
 // #define UNITS_SPEED_FEETPERSECOND
 // #define UNITS_SPEED_KILOMETERSPERHOUR
-#define UNITS_SPEED_MILESPERHOUR
+// #define UNITS_SPEED_MILESPERHOUR
 // #define UNITS_SPEED_KNOTS
-// #define UNITS_SPEED_BEAUFORT
+#define UNITS_SPEED_BEAUFORT
 
 // UNITS - PRESSURE
 //   Metric   : Millibars
 //   Imperial : Inches of Mercury
-// #define UNITS_PRES_HECTOPASCALS
+#define UNITS_PRES_HECTOPASCALS
 // #define UNITS_PRES_PASCALS
 // #define UNITS_PRES_MILLIMETERSOFMERCURY
-#define UNITS_PRES_INCHESOFMERCURY
+// #define UNITS_PRES_INCHESOFMERCURY
 // #define UNITS_PRES_MILLIBARS
 // #define UNITS_PRES_ATMOSPHERES
 // #define UNITS_PRES_GRAMSPERSQUARECENTIMETER
@@ -116,8 +118,8 @@
 // UNITS - VISIBILITY DISTANCE
 //   Metric   : Kilometers
 //   Imperial : Miles
-// #define UNITS_DIST_KILOMETERS
-#define UNITS_DIST_MILES
+#define UNITS_DIST_KILOMETERS
+// #define UNITS_DIST_MILES
 
 // UNITS - PRECIPITATION (HOURLY)
 // Measure of precipitation.
@@ -134,10 +136,10 @@
 // This can either be Probability of Precipitation (PoP) or daily volume.
 //   Metric   : Millimeters
 //   Imperial : Inches
-// #define UNITS_DAILY_PRECIP_POP
+#define UNITS_DAILY_PRECIP_POP
 // #define UNITS_DAILY_PRECIP_MILLIMETERS
 // #define UNITS_DAILY_PRECIP_CENTIMETERS
-#define UNITS_DAILY_PRECIP_INCHES
+// #define UNITS_DAILY_PRECIP_INCHES
 
 // Hypertext Transfer Protocol (HTTP)
 // HTTP
@@ -277,7 +279,7 @@
 //   0 : Disable (hide always)
 //   1 : Enable (show always)
 //   2 : Smart (show only when precipitation is forecasted)
-#define DISPLAY_DAILY_PRECIP 2
+#define DISPLAY_DAILY_PRECIP 1
 
 // HOURLY WEATHER ICONS
 // Weather icons to be displayed on the temperature and precipitation chart.
@@ -307,7 +309,7 @@
 //   You may choose to power your weather display with or without a battery.
 //   Low power behavior can be controlled in config.cpp.
 //   If you wish to disable battery monitoring set this macro to 0.
-#define BATTERY_MONITORING 1
+#define BATTERY_MONITORING 0
 
 // NON-VOLATILE STORAGE (NVS) NAMESPACE
 #define NVS_NAMESPACE "weather_epd"
@@ -377,8 +379,9 @@ extern const uint32_t MIN_BATTERY_VOLTAGE;
   #error Invalid configuration. Exactly one driver board must be selected.
 #endif
 #if !(  defined(SENSOR_BME280) \
-      ^ defined(SENSOR_BME680))
-  #error Invalid configuration. Exactly one sensor must be selected.
+      ^ defined(SENSOR_BME680) \
+      ^ defined(SENSOR_NONE))
+  #error Invalid configuration. Exactly one sensor option must be selected (BME280, BME680, or NONE).
 #endif
 #if !(defined(LOCALE))
   #error Invalid configuration. Locale not selected.

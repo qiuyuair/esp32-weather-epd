@@ -18,6 +18,26 @@
 #include <Arduino.h>
 #include "config.h"
 
+// Keep local credentials out of version control:
+// - optional `include/secrets.h` can define LOCAL_WIFI_SSID, LOCAL_WIFI_PASSWORD,
+//   and LOCAL_OWM_APIKEY
+// - fallback placeholders are used if secrets.h is absent
+#if __has_include("secrets.h")
+#include "secrets.h"
+#endif
+
+#ifndef LOCAL_WIFI_SSID
+#define LOCAL_WIFI_SSID "YOUR_WIFI_SSID"
+#endif
+
+#ifndef LOCAL_WIFI_PASSWORD
+#define LOCAL_WIFI_PASSWORD "YOUR_WIFI_PASSWORD"
+#endif
+
+#ifndef LOCAL_OWM_APIKEY
+#define LOCAL_OWM_APIKEY "YOUR_OWM_API_KEY"
+#endif
+
 // PINS
 // The configuration below is intended for use with the project's official 
 // wiring diagrams using the FireBeetle 2 ESP32-E microcontroller board.
@@ -29,23 +49,23 @@
 // ADC pin used to measure battery voltage
 const uint8_t PIN_BAT_ADC  = A2; // A0 for micro-usb firebeetle
 // Pins for E-Paper Driver Board
-const uint8_t PIN_EPD_BUSY = 14; // 5 for micro-usb firebeetle
-const uint8_t PIN_EPD_CS   = 13;
-const uint8_t PIN_EPD_RST  = 21;
-const uint8_t PIN_EPD_DC   = 22;
-const uint8_t PIN_EPD_SCK  = 18;
-const uint8_t PIN_EPD_MISO = 19; // 19 Master-In Slave-Out not used, as no data from display
-const uint8_t PIN_EPD_MOSI = 23;
-const uint8_t PIN_EPD_PWR  = 26; // Irrelevant if directly connected to 3.3V
-// I2C Pins used for BME280
-const uint8_t PIN_BME_SDA = 17;
-const uint8_t PIN_BME_SCL = 16;
-const uint8_t PIN_BME_PWR =  4;   // Irrelevant if directly connected to 3.3V
+const uint8_t PIN_EPD_BUSY = 5; // 5 for micro-usb firebeetle
+const uint8_t PIN_EPD_CS   = 7;
+const uint8_t PIN_EPD_RST  = 3;
+const uint8_t PIN_EPD_DC   = 1;
+const uint8_t PIN_EPD_SCK  = 4;
+const uint8_t PIN_EPD_MISO = 19; // not connected on wiring; kept for SPI.begin signature
+const uint8_t PIN_EPD_MOSI = 6;  // DIN
+const uint8_t PIN_EPD_PWR  = 10; // unused if panel power is hardwired to 3.3V
+// I2C Pins used for BME280 (ESP32-C3 common broken-out pins)
+const uint8_t PIN_BME_SDA = 8;
+const uint8_t PIN_BME_SCL = 9;
+const uint8_t PIN_BME_PWR =  2;   // Irrelevant if directly connected to 3.3V
 const uint8_t BME_ADDRESS = 0x76; // 0x76 if SDO -> GND; 0x77 if SDO -> VCC
 
 // WIFI
-const char *WIFI_SSID     = "ssid";
-const char *WIFI_PASSWORD = "password";
+const char *WIFI_SSID     = LOCAL_WIFI_SSID;
+const char *WIFI_PASSWORD = LOCAL_WIFI_PASSWORD;
 const unsigned long WIFI_TIMEOUT = 10000; // ms, WiFi connection timeout.
 
 // HTTP
@@ -58,7 +78,7 @@ const unsigned HTTP_CLIENT_TCP_TIMEOUT = 10000; // ms
 
 // OPENWEATHERMAP API
 // OpenWeatherMap API key, https://openweathermap.org/
-const String OWM_APIKEY   = "abcdefghijklmnopqrstuvwxyz012345";
+const String OWM_APIKEY   = LOCAL_OWM_APIKEY;
 const String OWM_ENDPOINT = "api.openweathermap.org";
 // OpenWeatherMap One Call 2.5 API is deprecated for all new free users
 // (accounts created after Summer 2022).
@@ -79,15 +99,15 @@ const String OWM_ONECALL_VERSION = "3.0";
 // LOCATION
 // Set your latitude and longitude.
 // (used to get weather data as part of API requests to OpenWeatherMap)
-const String LAT = "40.7128";
-const String LON = "-74.0060";
+const String LAT = "26.0415";
+const String LON = "119.3426";
 // City name that will be shown in the top-right corner of the display.
-const String CITY_STRING = "New York";
+const String CITY_STRING = "Fuzhou, Fujian, P.R.China";
 
 // TIME
 // For list of time zones see
 // https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv
-const char *TIMEZONE = "EST5EDT,M3.2.0,M11.1.0";
+const char *TIMEZONE = "CST-8";
 // Time format used when displaying sunrise/set times. (Max 11 characters)
 // For more information about formatting see
 // https://man7.org/linux/man-pages/man3/strftime.3.html
@@ -101,7 +121,7 @@ const char *HOUR_FORMAT = "%H";      // 24-hour ex: 01   23
 // Date format used when displaying date in top-right corner.
 // For more information about formatting see
 // https://man7.org/linux/man-pages/man3/strftime.3.html
-const char *DATE_FORMAT = "%a, %B %e"; // ex: Sat, January 1
+const char *DATE_FORMAT = "%A, %B %e"; // ex: Monday, January 1
 // Date/Time format used when displaying the last refresh time along the bottom
 // of the screen.
 // For more information about formatting see
@@ -109,8 +129,8 @@ const char *DATE_FORMAT = "%a, %B %e"; // ex: Sat, January 1
 const char *REFRESH_TIME_FORMAT = "%x %H:%M";
 // NTP_SERVER_1 is the primary time server, while NTP_SERVER_2 is a fallback.
 // pool.ntp.org will find the closest available NTP server to you.
-const char *NTP_SERVER_1 = "pool.ntp.org";
-const char *NTP_SERVER_2 = "time.nist.gov";
+const char *NTP_SERVER_1 = "ntp.aliyun.com";
+const char *NTP_SERVER_2 = "pool.ntp.org";
 // If you encounter the 'Failed To Fetch The Time' error, try increasing
 // NTP_TIMEOUT or select closer/lower latency time servers.
 const unsigned long NTP_TIMEOUT = 20000; // ms
@@ -124,8 +144,8 @@ const int SLEEP_DURATION = 30; // minutes
 // Bed Time Power Savings.
 // If BED_TIME == WAKE_TIME, then this battery saving feature will be disabled.
 // (range: [0-23])
-const int BED_TIME  = 00; // Last update at 00:00 (midnight) until WAKE_TIME.
-const int WAKE_TIME = 06; // Hour of first update after BED_TIME, 06:00.
+const int BED_TIME  = 0;  // Last update at 00:00 (midnight) until WAKE_TIME.
+const int WAKE_TIME = 6;  // Hour of first update after BED_TIME, 06:00.
 // Note that the minute alignment of SLEEP_DURATION begins at WAKE_TIME even if
 // Bed Time Power Savings is disabled.
 // For example, if WAKE_TIME = 00 (midnight) and SLEEP_DURATION = 120, then the

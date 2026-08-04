@@ -1524,10 +1524,21 @@ const char *getWifiStatusPhrase(wl_status_t status)
  */
 void disableBuiltinLED()
 {
-  pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, LOW);
-  gpio_hold_en(static_cast<gpio_num_t>(LED_BUILTIN));
-  gpio_deep_sleep_hold_en();
+#ifdef LED_BUILTIN
+  // Skip if the board LED pin is reused for BME280 I2C (common on ESP32-C3: GPIO8).
+  if (LED_BUILTIN == PIN_BME_SDA || LED_BUILTIN == PIN_BME_SCL)
+  {
+    return;
+  }
+  if (LED_BUILTIN < SOC_GPIO_PIN_COUNT
+      && GPIO_IS_VALID_OUTPUT_GPIO(static_cast<gpio_num_t>(LED_BUILTIN)))
+  {
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, LOW);
+    gpio_hold_en(static_cast<gpio_num_t>(LED_BUILTIN));
+    gpio_deep_sleep_hold_en();
+  }
+#endif
   return;
 } // end disableBuiltinLED
 

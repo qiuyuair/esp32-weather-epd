@@ -2670,15 +2670,10 @@ float avg_conc(const float pollutant[24], int hours)
     return 0.f;
   }
 
-  float avg = 0;
-  // index (size - 1) is most recent hourly concentration
-  for (int h = (24 - 1) - (hours - 1) ; h < 24 ; ++h)
-  {
-    avg += pollutant[h];
-  }
-
-  avg = avg / (float) hours;
-  return avg;
+  // Project now stores only the current air-pollution sample at index 0.
+  // Use it for any requested averaging window.
+  (void)hours;
+  return pollutant[0];
 }
 
 int calc_australia_aqi(
