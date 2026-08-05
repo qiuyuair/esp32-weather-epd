@@ -160,6 +160,7 @@ void setup()
       initDisplay();
       do
       {
+        clearDisplayPage();
         drawError(battery_alert_0deg_196x196, TXT_LOW_BATTERY);
       } while (display.nextPage());
       powerOffDisplay();
@@ -218,6 +219,7 @@ void setup()
       Serial.println(TXT_NETWORK_NOT_AVAILABLE);
       do
       {
+        clearDisplayPage();
         drawError(wifi_x_196x196, TXT_NETWORK_NOT_AVAILABLE);
       } while (display.nextPage());
     }
@@ -226,6 +228,7 @@ void setup()
       Serial.println(TXT_WIFI_CONNECTION_FAILED);
       do
       {
+        clearDisplayPage();
         drawError(wifi_x_196x196, TXT_WIFI_CONNECTION_FAILED);
       } while (display.nextPage());
     }
@@ -243,6 +246,7 @@ void setup()
     initDisplay();
     do
     {
+      clearDisplayPage();
       drawError(wi_time_4_196x196, TXT_TIME_SYNCHRONIZATION_FAILED);
     } while (display.nextPage());
     powerOffDisplay();
@@ -268,6 +272,7 @@ void setup()
     initDisplay();
     do
     {
+      clearDisplayPage();
       drawError(wi_cloud_down_196x196, statusStr, tmpStr);
     } while (display.nextPage());
     powerOffDisplay();
@@ -295,6 +300,7 @@ void setup()
     initDisplay();
     do
     {
+      clearDisplayPage();
       drawError(wi_cloud_down_196x196, statusStr, tmpStr);
     } while (display.nextPage());
     powerOffDisplay();
@@ -364,6 +370,7 @@ void setup()
   initDisplay();
   do
   {
+    clearDisplayPage();
     drawCurrentConditions(owm_onecall.current, owm_onecall.daily[0],
                           owm_air_pollution, inTemp, inHumidity);
     drawOutlookGraph(owm_onecall.hourly, owm_onecall.daily, timeInfo);

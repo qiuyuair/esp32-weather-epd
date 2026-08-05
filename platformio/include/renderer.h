@@ -76,12 +76,13 @@ typedef enum alignment
 
 uint16_t getStringWidth(const String &text);
 uint16_t getStringHeight(const String &text);
+void clearDisplayPage();
 void drawString(int16_t x, int16_t y, const String &text, alignment_t alignment,
-                uint16_t color=GxEPD_BLACK);
+                uint16_t color=COLOR_FG);
 void drawMultiLnString(int16_t x, int16_t y, const String &text,
                        alignment_t alignment, uint16_t max_width,
                        uint16_t max_lines, int16_t line_spacing,
-                       uint16_t color=GxEPD_BLACK);
+                       uint16_t color=COLOR_FG);
 void initDisplay();
 void powerOffDisplay();
 void drawCurrentConditions(const owm_current_t &current,

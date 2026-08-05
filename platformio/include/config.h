@@ -67,6 +67,23 @@
   // #define ACCENT_COLOR GxEPD_YELLOW
   // #define ACCENT_COLOR GxEPD_ORANGE
 #endif
+#if defined(DISP_4C_H)
+  // Yellow used for precip histogram hatching on 4-color panels.
+  #define HIGHLIGHT_COLOR GxEPD_YELLOW
+#endif
+
+// DISPLAY THEME
+// Uncomment THEME_INVERTED for black background / light ink (dark mode).
+// Accent/highlight colors (red/yellow) are unchanged.
+#define THEME_INVERTED
+
+#if defined(THEME_INVERTED)
+  #define COLOR_BG GxEPD_BLACK
+  #define COLOR_FG GxEPD_WHITE
+#else
+  #define COLOR_BG GxEPD_WHITE
+  #define COLOR_FG GxEPD_BLACK
+#endif
 
 // LOCALE
 // If your locale is not here, you can add it by copying and modifying one of
