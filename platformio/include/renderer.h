@@ -38,6 +38,13 @@
   extern GxEPD2_3C<GxEPD2_750c_GDEY075Z08,
                    GxEPD2_750c_GDEY075Z08::HEIGHT / 2> display;
 #endif
+#ifdef DISP_4C_H
+  #define DISP_WIDTH  800
+  #define DISP_HEIGHT 480
+  #include <GxEPD2_4C.h>
+  extern GxEPD2_4C<GxEPD2_750c_GDEM075F52,
+                   GxEPD2_750c_GDEM075F52::HEIGHT / 2> display;
+#endif
 #ifdef DISP_7C_F
   #define DISP_WIDTH  800
   #define DISP_HEIGHT 480

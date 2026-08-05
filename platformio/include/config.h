@@ -25,12 +25,14 @@
 // This project supports the following E-Paper panels:
 //   DISP_BW_V2 - 7.5in e-Paper (v2)           800x480px  Black/White
 //   DISP_3C_B  - 7.5in e-Paper (B)            800x480px  Red/Black/White
+//   DISP_4C_H  - 7.5in e-Paper (H)            800x480px  Red/Yellow/Black/White
 //   DISP_7C_F  - 7.3in ACeP e-Paper (F)       800x480px  7-Color
 //   DISP_7C_E6 - 7.3in spectra 6 e-Paper (E6) 800x480px  7-Color
 //   DISP_BW_V1 - 7.5in e-Paper (v1)           640x384px  Black/White
 // Uncomment the macro that identifies your physical panel.
 // #define DISP_BW_V2
-#define DISP_3C_B
+// #define DISP_3C_B
+#define DISP_4C_H
 // #define DISP_7C_F
 // #define DISP_7C_E6
 // #define DISP_BW_V1
@@ -55,9 +57,9 @@
 // add a small delay before reading it's value. 300ms seems to work for most people
 // #define SENSOR_INIT_DELAY_MS 300
 
-// 3 COLOR E-INK ACCENT COLOR
-// Defines the 3rd color to be used when a 3+ color display is selected.
-#if defined(DISP_3C_B) || defined(DISP_7C_F)
+// 3+ COLOR E-INK ACCENT COLOR
+// Defines the accent color to be used when a 3+ color display is selected.
+#if defined(DISP_3C_B) || defined(DISP_4C_H) || defined(DISP_7C_F)
   // #define ACCENT_COLOR GxEPD_BLACK
   #define ACCENT_COLOR GxEPD_RED
   // #define ACCENT_COLOR GxEPD_GREEN
@@ -369,6 +371,7 @@ extern const uint32_t MIN_BATTERY_VOLTAGE;
 // CONFIG VALIDATION - DO NOT MODIFY
 #if !(  defined(DISP_BW_V2)  \
       ^ defined(DISP_3C_B)   \
+      ^ defined(DISP_4C_H)   \
       ^ defined(DISP_7C_F)   \
       ^ defined(DISP_7C_E6)  \
       ^ defined(DISP_BW_V1))

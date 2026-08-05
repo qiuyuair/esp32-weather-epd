@@ -53,6 +53,14 @@
                            PIN_EPD_RST,
                            PIN_EPD_BUSY));
 #endif
+#ifdef DISP_4C_H
+  GxEPD2_4C<GxEPD2_750c_GDEM075F52,
+            GxEPD2_750c_GDEM075F52::HEIGHT / 2> display(
+    GxEPD2_750c_GDEM075F52(PIN_EPD_CS,
+                           PIN_EPD_DC,
+                           PIN_EPD_RST,
+                           PIN_EPD_BUSY));
+#endif
 #ifdef DISP_7C_F
   GxEPD2_7C<GxEPD2_730c_GDEY073D46,
             GxEPD2_730c_GDEY073D46::HEIGHT / 4> display(
@@ -1669,7 +1677,7 @@ void drawStatusBar(const String &statusStr, const String &refreshTimeStr,
   uint32_t batPercent = calcBatPercent(batVoltage,
                                        MIN_BATTERY_VOLTAGE,
                                        MAX_BATTERY_VOLTAGE);
-#if defined(DISP_3C_B) || defined(DISP_7C_F)
+#if defined(DISP_3C_B) || defined(DISP_4C_H) || defined(DISP_7C_F)
   if (batVoltage < WARN_BATTERY_VOLTAGE)
   {
     dataColor = ACCENT_COLOR;
