@@ -48,19 +48,20 @@
 //
 // ADC pin used to measure battery voltage
 const uint8_t PIN_BAT_ADC  = A2; // A0 for micro-usb firebeetle
-// Pins for E-Paper Driver Board
-const uint8_t PIN_EPD_BUSY = 5; // 5 for micro-usb firebeetle
-const uint8_t PIN_EPD_CS   = 7;
-const uint8_t PIN_EPD_RST  = 3;
-const uint8_t PIN_EPD_DC   = 1;
-const uint8_t PIN_EPD_SCK  = 4;
+// Pins for E-Paper Driver Board (ESP32-C3 ↔ Waveshare)
+// BUSY=2 CS=3 DC=10 RES=6 SDI/MOSI=7 SCL/SCK=5
+const uint8_t PIN_EPD_BUSY = 2;
+const uint8_t PIN_EPD_CS   = 3;
+const uint8_t PIN_EPD_RST  = 6;
+const uint8_t PIN_EPD_DC   = 10;
+const uint8_t PIN_EPD_SCK  = 5;
 const uint8_t PIN_EPD_MISO = 19; // not connected on wiring; kept for SPI.begin signature
-const uint8_t PIN_EPD_MOSI = 6;  // DIN
-const uint8_t PIN_EPD_PWR  = 10; // unused if panel power is hardwired to 3.3V
+const uint8_t PIN_EPD_MOSI = 7;  // SDI / DIN
+const uint8_t PIN_EPD_PWR  = 1;  // unused if panel power is hardwired to 3.3V
 // I2C Pins used for BME280 (ESP32-C3 common broken-out pins)
 const uint8_t PIN_BME_SDA = 8;
 const uint8_t PIN_BME_SCL = 9;
-const uint8_t PIN_BME_PWR =  2;   // Irrelevant if directly connected to 3.3V
+const uint8_t PIN_BME_PWR = 4;   // Irrelevant if directly connected to 3.3V
 const uint8_t BME_ADDRESS = 0x76; // 0x76 if SDO -> GND; 0x77 if SDO -> VCC
 
 // WIFI
