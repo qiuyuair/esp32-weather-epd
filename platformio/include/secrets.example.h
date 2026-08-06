@@ -1,5 +1,6 @@
 // Copy this file to secrets.h and fill in your real values.
 // secrets.h is gitignored by platformio/.gitignore.
+// For location / pins, copy config.local.example.h → config.local.h.
 
 #pragma once
 

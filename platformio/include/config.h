@@ -21,61 +21,27 @@
 #include <cstdint>
 #include <Arduino.h>
 
-// E-PAPER PANEL
-// This project supports the following E-Paper panels:
-//   DISP_BW_V2 - 7.5in e-Paper (v2)           800x480px  Black/White
-//   DISP_3C_B  - 7.5in e-Paper (B)            800x480px  Red/Black/White
-//   DISP_4C_H  - 7.5in e-Paper (H)            800x480px  Red/Yellow/Black/White
-//   DISP_7C_F  - 7.3in ACeP e-Paper (F)       800x480px  7-Color
-//   DISP_7C_E6 - 7.3in spectra 6 e-Paper (E6) 800x480px  7-Color
-//   DISP_BW_V1 - 7.5in e-Paper (v1)           640x384px  Black/White
-// Uncomment the macro that identifies your physical panel.
-// #define DISP_BW_V2
-// #define DISP_3C_B
-#define DISP_4C_H
-// #define DISP_7C_F
-// #define DISP_7C_E6
-// #define DISP_BW_V1
+// Personal UI / board / location: copy config.local.example.h → config.local.h
+// (gitignored). Panel, driver, sensor, locale, THEME_INVERTED, pins, city…
+#if __has_include("config.local.h")
+  #include "config.local.h"
+#endif
+#include "config.defaults.h"
 
-// E-PAPER DRIVER BOARD
-// The DESPI-C02 is the only officially supported driver board.
-// Support for the Waveshare rev2.2 and rev2.3 is deprecated.
-// The Waveshare rev2.2 is no longer in production.
-// Users of the Waveshare rev2.3 have reported experiencing low contrast issues.
-// Uncomment the macro that identifies your driver board hardware.
-// ##define DRIVER_DESPI_C02
-#define DRIVER_WAVESHARE
-
-// INDOOR ENVIRONMENT SENSOR
-// Uncomment the macro that identifies your sensor.
-// Use SENSOR_NONE if no indoor sensor is connected.
-#define SENSOR_BME280
-// #define SENSOR_BME680
-// #define SENSOR_NONE
-
-// If you encounter issues with the BME280 sensor showing no data, uncomment and
-// add a small delay before reading it's value. 300ms seems to work for most people
+// Optional BME280 settle delay (ms). Uncomment in config.local.h if needed.
 // #define SENSOR_INIT_DELAY_MS 300
 
 // 3+ COLOR E-INK ACCENT COLOR
-// Defines the accent color to be used when a 3+ color display is selected.
 #if defined(DISP_3C_B) || defined(DISP_4C_H) || defined(DISP_7C_F)
-  // #define ACCENT_COLOR GxEPD_BLACK
-  #define ACCENT_COLOR GxEPD_RED
-  // #define ACCENT_COLOR GxEPD_GREEN
-  // #define ACCENT_COLOR GxEPD_BLUE
-  // #define ACCENT_COLOR GxEPD_YELLOW
-  // #define ACCENT_COLOR GxEPD_ORANGE
+  #ifndef ACCENT_COLOR
+    #define ACCENT_COLOR GxEPD_RED
+  #endif
 #endif
 #if defined(DISP_4C_H)
-  // Yellow used for precip histogram hatching on 4-color panels.
-  #define HIGHLIGHT_COLOR GxEPD_YELLOW
+  #ifndef HIGHLIGHT_COLOR
+    #define HIGHLIGHT_COLOR GxEPD_YELLOW
+  #endif
 #endif
-
-// DISPLAY THEME
-// Uncomment THEME_INVERTED for black background / light ink (dark mode).
-// Accent/highlight colors (red/yellow) are unchanged.
-#define THEME_INVERTED
 
 #if defined(THEME_INVERTED)
   #define COLOR_BG GxEPD_BLACK
@@ -85,22 +51,15 @@
   #define COLOR_FG GxEPD_BLACK
 #endif
 
-// LOCALE
-// If your locale is not here, you can add it by copying and modifying one of
-// the files in src/locales. Please feel free to create a pull request to add
-// official support for your locale.
-//   Language (Territory)            code
-//   German (Germany)                de_DE
-//   English (United Kingdom)        en_GB
-//   English (United States)         en_US
-//   Estonian (Estonia)              et_EE
-//   Finnish (Finland)               fi_FI
-//   French (France)                 fr_FR
-//   Italiano (Italia)               it_IT
-//   Dutch (Belgium)                 nl_BE
-//   Portuguese (Brazil)             pt_BR
-//   Spanish (Spain)                 es_ES
-#define LOCALE en_US
+// Auto-enable U8g2 CJK rendering for Simplified Chinese locale strings.
+#define zh_CN_IS_zh_CN 1
+#define ESP32_WEATHER_LOCALE_IS_ZH(x) ESP32_WEATHER_LOCALE_IS_ZH2(x)
+#define ESP32_WEATHER_LOCALE_IS_ZH2(x) x##_IS_zh_CN
+#if ESP32_WEATHER_LOCALE_IS_ZH(LOCALE)
+  #ifndef USE_U8G2_CJK
+    #define USE_U8G2_CJK
+  #endif
+#endif
 
 // UNITS
 // Define exactly one macro for each measurement type below.
@@ -340,7 +299,7 @@
 //   level 2: print api responses to serial monitor
 #define DEBUG_LEVEL 0
 
-// Set the below constants in "config.cpp"
+// Set the below constants in "config.cpp" (pins/location come from config.local.h)
 extern const uint8_t PIN_BAT_ADC;
 extern const uint8_t PIN_EPD_BUSY;
 extern const uint8_t PIN_EPD_CS;
@@ -354,6 +313,7 @@ extern const uint8_t PIN_BME_SDA;
 extern const uint8_t PIN_BME_SCL;
 extern const uint8_t PIN_BME_PWR;
 extern const uint8_t BME_ADDRESS;
+extern const uint8_t SHT_ADDRESS;
 extern const char *WIFI_SSID;
 extern const char *WIFI_PASSWORD;
 extern const unsigned long WIFI_TIMEOUT;
@@ -400,8 +360,9 @@ extern const uint32_t MIN_BATTERY_VOLTAGE;
 #endif
 #if !(  defined(SENSOR_BME280) \
       ^ defined(SENSOR_BME680) \
+      ^ defined(SENSOR_SHT41)  \
       ^ defined(SENSOR_NONE))
-  #error Invalid configuration. Exactly one sensor option must be selected (BME280, BME680, or NONE).
+  #error Invalid configuration. Exactly one sensor option must be selected (BME280, BME680, SHT41, or NONE).
 #endif
 #if !(defined(LOCALE))
   #error Invalid configuration. Locale not selected.

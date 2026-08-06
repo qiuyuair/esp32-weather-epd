@@ -195,6 +195,67 @@ void toTitleCase(String &text)
   return;
 } // end toTitleCase
 
+/* Strip UTF-8 / non-ASCII so Adafruit GFX Latin fonts do not show mojibake.
+ * Multi-byte sequences (e.g. Japanese weather alerts) are skipped entirely.
+ */
+String sanitizeAsciiForDisplay(const String &text)
+{
+  String out;
+  out.reserve(text.length());
+  for (unsigned i = 0; i < text.length(); )
+  {
+    const uint8_t c = static_cast<uint8_t>(text[i]);
+    if (c <= 0x7F)
+    {
+      if (c >= 0x20 && c <= 0x7E)
+      {
+        out += static_cast<char>(c);
+      }
+      ++i;
+    }
+    else if ((c & 0xE0) == 0xC0 && i + 1 < text.length())
+    {
+      i += 2;
+    }
+    else if ((c & 0xF0) == 0xE0 && i + 2 < text.length())
+    {
+      i += 3;
+    }
+    else if ((c & 0xF8) == 0xF0 && i + 3 < text.length())
+    {
+      i += 4;
+    }
+    else
+    {
+      ++i;
+    }
+  }
+  out.trim();
+  while (out.indexOf("  ") >= 0)
+  {
+    out.replace("  ", " ");
+  }
+  return out;
+} // end sanitizeAsciiForDisplay
+
+/* Display label for an alert: ASCII event, else OWM tags (often English),
+ * else a generic fallback. Title-cases a copy; does not mutate alert.event.
+ */
+String getAlertDisplayText(const owm_alerts_t &alert)
+{
+  String text = sanitizeAsciiForDisplay(alert.event);
+  if (text.isEmpty())
+  {
+    text = sanitizeAsciiForDisplay(alert.tags);
+  }
+  if (text.isEmpty())
+  {
+    return String("Weather Alert");
+  }
+  toTitleCase(text);
+  return text;
+} // end getAlertDisplayText
+
 /* Takes a String and truncates at any of these characters ,.( and trims any
  * trailing whitespace.
  *

@@ -58,6 +58,10 @@ void getRefreshTimeStr(String &s, bool timeSuccess, tm *timeInfo);
 void toTitleCase(String &text);
 void truncateExtraAlertInfo(String &text);
 void filterAlerts(std::vector<owm_alerts_t> &resp, int *ignore_list);
+/* Keep printable ASCII only. FreeSans lacks CJK; OWM JP alerts are UTF-8. */
+String sanitizeAsciiForDisplay(const String &text);
+/* Prefer ASCII event text; if none (e.g. Japanese), fall back to tags. */
+String getAlertDisplayText(const owm_alerts_t &alert);
 const char *getUVIdesc(unsigned int uvi);
 float getAvgConc(const float pollutant[], int hours);
 int getAQI(const owm_resp_air_pollution_t &p);

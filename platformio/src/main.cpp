@@ -37,6 +37,9 @@
 #if defined(SENSOR_BME680)
   #include <Adafruit_BME680.h>
 #endif
+#if defined(SENSOR_SHT41)
+  #include <Adafruit_SHT4x.h>
+#endif
 #if defined(USE_HTTPS_WITH_CERT_VERIF) || defined(USE_HTTPS_WITH_CERT_VERIF)
   #include <WiFiClientSecure.h>
 #endif
@@ -308,7 +311,7 @@ void setup()
   }
   killWiFi(); // WiFi no longer needed
 
-  // GET INDOOR TEMPERATURE AND HUMIDITY, start BMEx80...
+  // GET INDOOR TEMPERATURE AND HUMIDITY
   float inTemp     = NAN;
   float inHumidity = NAN;
 #if !defined(SENSOR_NONE)
@@ -324,20 +327,11 @@ void setup()
   Serial.print(String(TXT_READING_FROM) + " BME280... ");
   Adafruit_BME280 bme;
 
-  if(bme.begin(BME_ADDRESS, &I2C_bme))
+  if (bme.begin(BME_ADDRESS, &I2C_bme))
   {
-#endif
-#if defined(SENSOR_BME680)
-  Serial.print(String(TXT_READING_FROM) + " BME680... ");
-  Adafruit_BME680 bme(&I2C_bme);
-
-  if(bme.begin(BME_ADDRESS))
-  {
-#endif
     inTemp     = bme.readTemperature(); // Celsius
     inHumidity = bme.readHumidity();    // %
 
-    // check if BME readings are valid
     // note: readings are checked again before drawing to screen. If a reading
     //       is not a number (NAN) then an error occurred, a dash '-' will be
     //       displayed.
@@ -356,6 +350,64 @@ void setup()
     statusStr = "BME " + String(TXT_NOT_FOUND); // check wiring
     Serial.println(statusStr);
   }
+#endif
+#if defined(SENSOR_BME680)
+  Serial.print(String(TXT_READING_FROM) + " BME680... ");
+  Adafruit_BME680 bme(&I2C_bme);
+
+  if (bme.begin(BME_ADDRESS))
+  {
+    inTemp     = bme.readTemperature(); // Celsius
+    inHumidity = bme.readHumidity();    // %
+
+    if (std::isnan(inTemp) || std::isnan(inHumidity))
+    {
+      statusStr = "BME " + String(TXT_READ_FAILED);
+      Serial.println(statusStr);
+    }
+    else
+    {
+      Serial.println(TXT_SUCCESS);
+    }
+  }
+  else
+  {
+    statusStr = "BME " + String(TXT_NOT_FOUND); // check wiring
+    Serial.println(statusStr);
+  }
+#endif
+#if defined(SENSOR_SHT41)
+  Serial.print(String(TXT_READING_FROM) + " SHT41... ");
+  Adafruit_SHT4x sht4;
+  // Adafruit_SHT4x begin() probes the default 0x44 address.
+  (void)SHT_ADDRESS;
+
+  if (sht4.begin(&I2C_bme))
+  {
+    sht4.setPrecision(SHT4X_HIGH_PRECISION);
+    sht4.setHeater(SHT4X_NO_HEATER);
+    sensors_event_t humidity;
+    sensors_event_t temp;
+    sht4.getEvent(&humidity, &temp);
+    inTemp     = temp.temperature;           // Celsius
+    inHumidity = humidity.relative_humidity; // %
+
+    if (std::isnan(inTemp) || std::isnan(inHumidity))
+    {
+      statusStr = "SHT41 " + String(TXT_READ_FAILED);
+      Serial.println(statusStr);
+    }
+    else
+    {
+      Serial.println(TXT_SUCCESS);
+    }
+  }
+  else
+  {
+    statusStr = "SHT41 " + String(TXT_NOT_FOUND); // check wiring
+    Serial.println(statusStr);
+  }
+#endif
   digitalWrite(PIN_BME_PWR, LOW);
 #endif // !SENSOR_NONE
 
