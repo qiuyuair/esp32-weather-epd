@@ -26,6 +26,15 @@
 // fonts
 #include FONT_HEADER
 
+#ifdef USE_U8G2_CJK
+#include <U8g2_for_Adafruit_GFX.h>
+static U8G2_FOR_ADAFRUIT_GFX u8g2Fonts;
+// WenQuanYi 16pt GB2312a — purpose-built bitmap CJK for displays.
+static const uint8_t *const CJK_FONT = u8g2_font_wqy16_t_gb2312a;
+// Extra horizontal pass makes thin bitmap glyphs read more clearly on EPD.
+static constexpr int16_t CJK_STROKE_BOOST = 1;
+#endif
+
 // icon header files
 #include "icons/icons_16x16.h"
 #include "icons/icons_24x24.h"
@@ -93,10 +102,127 @@
   #define HIGHLIGHT_COLOR COLOR_FG
 #endif
 
+#ifdef USE_U8G2_CJK
+static bool textNeedsCjkFont(const String &text)
+{
+  for (unsigned i = 0; i < text.length(); ++i)
+  {
+    if (static_cast<uint8_t>(text[i]) >= 0x80)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+static void prepareCjkFont(uint16_t color)
+{
+  u8g2Fonts.setFontMode(1); // transparent background
+  u8g2Fonts.setFontDirection(0);
+  u8g2Fonts.setForegroundColor(color);
+  u8g2Fonts.setBackgroundColor(COLOR_BG);
+  u8g2Fonts.setFont(CJK_FONT);
+}
+
+static void printCjkAt(int16_t x, int16_t y, const String &text)
+{
+  u8g2Fonts.setCursor(x, y);
+  u8g2Fonts.print(text);
+  if (CJK_STROKE_BOOST > 0)
+  {
+    u8g2Fonts.setCursor(x + CJK_STROKE_BOOST, y);
+    u8g2Fonts.print(text);
+  }
+}
+
+/* Draw CJK text magnified by scaleNum/scaleDen (baseline y, like drawString). */
+static void drawCjkStringScaled(int16_t x, int16_t y, const String &text,
+                                alignment_t alignment, uint16_t color,
+                                uint8_t scaleNum, uint8_t scaleDen = 1)
+{
+  if (scaleNum < 1)
+  {
+    scaleNum = 1;
+  }
+  if (scaleDen < 1)
+  {
+    scaleDen = 1;
+  }
+  prepareCjkFont(color);
+  const int16_t src_w = u8g2Fonts.getUTF8Width(text.c_str());
+  const int16_t ascent = u8g2Fonts.getFontAscent();
+  const int16_t descent = u8g2Fonts.getFontDescent(); // typically negative
+  const int16_t src_h = ascent - descent;
+  if (src_w <= 0 || src_h <= 0)
+  {
+    return;
+  }
+
+  const int16_t out_w =
+      (src_w * scaleNum) / scaleDen +
+      (CJK_STROKE_BOOST > 0 ? (CJK_STROKE_BOOST * scaleNum) / scaleDen : 0);
+  if (alignment == RIGHT)
+  {
+    x = x - out_w;
+  }
+  else if (alignment == CENTER)
+  {
+    x = x - out_w / 2;
+  }
+
+  if (scaleNum == scaleDen)
+  {
+    printCjkAt(x, y, text);
+    return;
+  }
+
+  // Render 1x into a tiny mono canvas, then blit scaled blocks.
+  GFXcanvas1 canvas(src_w + CJK_STROKE_BOOST + 1, src_h + 1);
+  canvas.fillScreen(0);
+  U8G2_FOR_ADAFRUIT_GFX tmp;
+  tmp.begin(canvas);
+  tmp.setFontMode(1);
+  tmp.setFontDirection(0);
+  tmp.setForegroundColor(1);
+  tmp.setBackgroundColor(0);
+  tmp.setFont(CJK_FONT);
+  tmp.setCursor(0, ascent);
+  tmp.print(text);
+  if (CJK_STROKE_BOOST > 0)
+  {
+    tmp.setCursor(CJK_STROKE_BOOST, ascent);
+    tmp.print(text);
+  }
+
+  const int16_t top = y - (ascent * scaleNum) / scaleDen;
+  const int16_t block = (scaleNum + scaleDen - 1) / scaleDen; // ceil scale
+  for (int16_t row = 0; row < src_h; ++row)
+  {
+    for (int16_t col = 0; col < src_w + CJK_STROKE_BOOST; ++col)
+    {
+      if (canvas.getPixel(col, row))
+      {
+        const int16_t dx = x + (col * scaleNum) / scaleDen;
+        const int16_t dy = top + (row * scaleNum) / scaleDen;
+        display.fillRect(dx, dy, block, block, color);
+      }
+    }
+  }
+}
+#endif
+
 /* Returns the string width in pixels
  */
 uint16_t getStringWidth(const String &text)
 {
+#ifdef USE_U8G2_CJK
+  if (textNeedsCjkFont(text))
+  {
+    prepareCjkFont(COLOR_FG);
+    return static_cast<uint16_t>(
+        u8g2Fonts.getUTF8Width(text.c_str()) + CJK_STROKE_BOOST);
+  }
+#endif
   int16_t x1, y1;
   uint16_t w, h;
   display.getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
@@ -107,6 +233,14 @@ uint16_t getStringWidth(const String &text)
  */
 uint16_t getStringHeight(const String &text)
 {
+#ifdef USE_U8G2_CJK
+  if (textNeedsCjkFont(text))
+  {
+    prepareCjkFont(COLOR_FG);
+    return static_cast<uint16_t>(u8g2Fonts.getFontAscent() -
+                                 u8g2Fonts.getFontDescent());
+  }
+#endif
   int16_t x1, y1;
   uint16_t w, h;
   display.getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
@@ -127,6 +261,24 @@ void clearDisplayPage()
 void drawString(int16_t x, int16_t y, const String &text, alignment_t alignment,
                 uint16_t color)
 {
+#ifdef USE_U8G2_CJK
+  if (textNeedsCjkFont(text))
+  {
+    prepareCjkFont(color);
+    const int16_t w =
+        u8g2Fonts.getUTF8Width(text.c_str()) + CJK_STROKE_BOOST;
+    if (alignment == RIGHT)
+    {
+      x = x - w;
+    }
+    else if (alignment == CENTER)
+    {
+      x = x - w / 2;
+    }
+    printCjkAt(x, y, text);
+    return;
+  }
+#endif
   int16_t x1, y1;
   uint16_t w, h;
   display.setTextColor(color);
@@ -163,10 +315,7 @@ void drawMultiLnString(int16_t x, int16_t y, const String &text,
   // print until we reach max_lines or no more text remains
   while (current_line < max_lines && !textRemaining.isEmpty())
   {
-    int16_t  x1, y1;
-    uint16_t w, h;
-
-    display.getTextBounds(textRemaining, 0, 0, &x1, &y1, &w, &h);
+    uint16_t w = getStringWidth(textRemaining);
 
     int endIndex = textRemaining.length();
     // check if remaining text is to wide, if it is then print what we can
@@ -194,6 +343,27 @@ void drawMultiLnString(int16_t x, int16_t y, const String &text,
         splitAt = subStr.lastIndexOf(" ");
       }
 
+#ifdef USE_U8G2_CJK
+      // Chinese has no spaces; shrink by UTF-8 codepoints when needed.
+      if (splitAt == -1 && textNeedsCjkFont(subStr))
+      {
+        while (getStringWidth(subStr) > max_width && subStr.length() > 0)
+        {
+          int i = static_cast<int>(subStr.length()) - 1;
+          while (i > 0 &&
+                 (static_cast<uint8_t>(subStr[i]) & 0xC0) == 0x80)
+          {
+            --i;
+          }
+          subStr.remove(i);
+        }
+        endIndex = static_cast<int>(subStr.length()) - 1;
+        splitAt = endIndex;
+        w = getStringWidth(subStr);
+        break;
+      }
+#endif
+
       // if splitAt == -1 then there is an unbroken set of characters that is
       // longer than max_width. Otherwise if splitAt != -1 then we can continue
       // the loop until the string is <= max_width
@@ -219,13 +389,13 @@ void drawMultiLnString(int16_t x, int16_t y, const String &text,
         if (current_line < max_lines - 1)
         {
           // this is not the last line
-          display.getTextBounds(subStr, 0, 0, &x1, &y1, &w, &h);
+          w = getStringWidth(subStr);
         }
         else
         {
           // this is the last line, we need to make sure there is space for
           // ellipsis
-          display.getTextBounds(subStr + "...", 0, 0, &x1, &y1, &w, &h);
+          w = getStringWidth(subStr + "...");
           if (w <= max_width)
           {
             // ellipsis fit, add them to subStr
@@ -272,6 +442,10 @@ void initDisplay()
   display.setTextColor(COLOR_FG);
   display.setTextWrap(false);
   display.setFullWindow();
+#ifdef USE_U8G2_CJK
+  u8g2Fonts.begin(display);
+  prepareCjkFont(COLOR_FG);
+#endif
   display.firstPage(); // paged mode; call clearDisplayPage() each iteration
   return;
 } // end initDisplay
@@ -1112,7 +1286,7 @@ void drawForecast(const owm_daily_t *daily, tm timeInfo)
     timeInfo.tm_wday = (timeInfo.tm_wday + 1) % 7; // increment to next day
 
     // high | low
-    display.setFont(&FONT_8pt8b);
+    display.setFont(&FONT_10pt8b);
     drawString(x + 31, 98 + 69 / 2 + 38 - 6 + 12, "|", CENTER);
 #ifdef UNITS_TEMP_KELVIN
     hiStr = String(static_cast<int>(std::round(daily[i].temp.max)));
@@ -1305,6 +1479,18 @@ void drawForecast(const owm_daily_t *daily, tm timeInfo)
 void drawLocationDate(const String &city, const String &date)
 {
   // location, date
+#ifdef USE_U8G2_CJK
+  if (textNeedsCjkFont(city))
+  {
+    // wqy16 × 7/4 ≈ 28px — slightly smaller than full 2×
+    constexpr int16_t city_baseline = 32;
+    drawCjkStringScaled(DISP_WIDTH - 2, city_baseline, city, RIGHT,
+                        ACCENT_COLOR, 7, 4);
+    display.setFont(&FONT_12pt8b);
+    drawString(DISP_WIDTH - 2, city_baseline + 10 + 18, date, RIGHT);
+    return;
+  }
+#endif
   display.setFont(&FONT_16pt8b);
   drawString(DISP_WIDTH - 2, 23, city, RIGHT, ACCENT_COLOR);
   display.setFont(&FONT_12pt8b);

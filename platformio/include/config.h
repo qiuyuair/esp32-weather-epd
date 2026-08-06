@@ -100,7 +100,11 @@
 //   Dutch (Belgium)                 nl_BE
 //   Portuguese (Brazil)             pt_BR
 //   Spanish (Spain)                 es_ES
-#define LOCALE en_US
+//   Chinese (China, Simplified)     zh_CN
+// #define LOCALE en_US
+#define LOCALE zh_CN
+// Enable U8g2 CJK text rendering for Chinese locale strings.
+#define USE_U8G2_CJK
 
 // UNITS
 // Define exactly one macro for each measurement type below.
