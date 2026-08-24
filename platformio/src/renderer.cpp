@@ -1834,17 +1834,7 @@ void drawOutlookGraph(const owm_hourly_t *hourly, const owm_daily_t *daily,
     y0_t = static_cast<int>(std::round( yPos1 - (yPxPerUnit * (precipVal)) ));
     y1_t = yPos1;
 
-    // graph Precipitation (yellow/black hatch on 4C, dotted black otherwise)
-#if defined(DISP_4C_H)
-    for (int y = y1_t - 1; y > y0_t; --y)
-    {
-      for (int x = x0_t; x < x1_t; ++x)
-      {
-        display.drawPixel(x, y,
-                          ((x + y) & 1) ? COLOR_FG : HIGHLIGHT_COLOR);
-      }
-    }
-#else
+    // graph Precipitation
     for (int y = y1_t - 1; y > y0_t; y -= 2)
     {
       for (int x = x0_t + (x0_t % 2); x < x1_t; x += 2)
@@ -1852,7 +1842,6 @@ void drawOutlookGraph(const owm_hourly_t *hourly, const owm_daily_t *daily,
         display.drawPixel(x, y, COLOR_FG);
       }
     }
-#endif
 
     if ((i % hourInterval) == 0)
     {
